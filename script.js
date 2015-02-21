@@ -115,14 +115,14 @@ function renderPopulation(year) {
 
 	meshes = counties.map(function(county) {
 		var population = getPopulation(county.id, year);
-		var extrusion = getExtrusion(population);
+		var extrusion = Math.round(getExtrusion(population));
 		var color = d3.hsl(105, 0.9, getLuminance(population)).toString();
 
 		var extrudeMaterial = new THREE.MeshLambertMaterial({color: color}); 
 		var faceMaterial = new THREE.MeshBasicMaterial({color: color});
 
 		var geometry = county.geometry.extrude({
-			amount: Math.round(extrusion),
+			amount: extrusion,
 			bevelEnabled: false,
 			extrudeMaterial: 0,
 			material: 1
@@ -136,6 +136,7 @@ function renderPopulation(year) {
 		mesh.rotateZ(-1.60);
 		mesh.translateX(-425);
 		mesh.translateY(-183 + extrusion/2);
+		mesh.translateZ(-extrusion);
 
 		scene.add(mesh);
 
