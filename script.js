@@ -28,7 +28,9 @@ function initThree() {
 	scene = new THREE.Scene();
 
 	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
-	camera.position.set(0, 45, 0);
+	camera.position.set(10, 22, 2.5);
+	camera.up.set(-0.06, 1, 0.14);
+
 	restoreCameraOrientation(camera);
 	// scene.add(camera);
 
@@ -80,7 +82,7 @@ function onWindowResize() {
 
 
 function cameraIter(callback) {
-	['position', 'quarternion', 'up'].forEach(callback);
+	['position', 'up'].forEach(callback);
 }
 
 function saveCameraOrientation() {
