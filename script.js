@@ -7,10 +7,6 @@ var MAX_EXTRUSION = 10;
 
 var years = [];
 
-var WIDTH = window.innerWidth, HEIGHT = window.innerHeight,
-	NEAR = 0.1, FAR = 10000,
-	VIEW_ANGLE = 45;
-
 function getPopulation(countyCode, year) {
 	return censusData.get(countyCode).get(year);
 }
@@ -25,17 +21,15 @@ var getLuminance;
 
 function initThree() {
 	renderer = new THREE.WebGLRenderer();
-	renderer.setSize(WIDTH, HEIGHT);
+	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.getElementById('chart').appendChild(renderer.domElement);
 
 	scene = new THREE.Scene();
 
-	camera = new THREE.PerspectiveCamera(VIEW_ANGLE, WIDTH / HEIGHT, NEAR, FAR);
-	camera.position.x = 0;
-	camera.position.y = 45;
-	camera.position.z = 0;
+	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+	camera.position.set(0, 45, 0);
 	restoreCameraOrientation(camera);
-	scene.add(camera);
+	// scene.add(camera);
 
 	// DEBUG: add a cube, for reference
 	var geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -45,10 +39,8 @@ function initThree() {
 
 	// add a light at a specific position
 	var pointLight = new THREE.PointLight(0xFFFFFF);
+	pointLight.position.set(800, 800, 800);
 	scene.add(pointLight);
-	pointLight.position.x = 800;
-	pointLight.position.y = 800;
-	pointLight.position.z = 800;
 
 	// add a base plane on which we'll render our map
 	// var planeGeo = new THREE.PlaneBufferGeometry(10000, 10000, 10, 10);
@@ -75,6 +67,13 @@ function animate() {
 	render();
 
 	requestAnimationFrame(animate);
+}
+
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+
+	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 
@@ -245,4 +244,5 @@ loadData(dataSources, function(results) {
 	yearSelect.find('button')[0].click();
 });
 
-window.onbeforeunload = saveCameraOrientation;
+jQuery(window).on('resize', onWindowResize);
+jQuery(window).on('beforeunload', saveCameraOrientation);
