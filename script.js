@@ -1,19 +1,23 @@
-var renderer, scene, camera;
+var renderer, scene, camera, meshes = [];
 var censusData = d3.map();
 var counties;
 
 var RO_CENTER = [45.9442858, 25.0094303];
 var max_population = 0, MAX_EXTRUSION = 10;
 
+var years = [];
+
+var WIDTH = window.innerWidth, HEIGHT = window.innerHeight,
+	NEAR = 0.1, FAR = 10000,
+	VIEW_ANGLE = 45;
+
+function getPopulation(countyCode, year) {
+	return censusData.get(countyCode).get(year);
+}
+
 // function that maps population int to extrusion value
 // requires the maximum possible population
 var getExtrusion;
-
-var years = [];
-
-var WIDTH = window.innerWidth, HEIGHT = window.innerHeight - 34,
-	NEAR = 0.1, FAR = 10000,
-	VIEW_ANGLE = 45;
 
 function initThree() {
 	renderer = new THREE.WebGLRenderer();
@@ -43,13 +47,13 @@ function initThree() {
 	pointLight.position.z = 800;
 
 	// add a base plane on which we'll render our map
-	var planeGeo = new THREE.PlaneBufferGeometry(10000, 10000, 10, 10);
-	var planeMat = new THREE.MeshLambertMaterial({color: 0x666699});
-	var plane = new THREE.Mesh(planeGeo, planeMat);
+	// var planeGeo = new THREE.PlaneBufferGeometry(10000, 10000, 10, 10);
+	// var planeMat = new THREE.MeshLambertMaterial({color: 0x666699});
+	// var plane = new THREE.Mesh(planeGeo, planeMat);
 
 	// rotate it to correct position
-	plane.rotation.x = -Math.PI/2;
-	scene.add(plane);
+	// plane.rotation.x = -Math.PI/2;
+	// scene.add(plane);
 
 	controls = new THREE.TrackballControls(camera, renderer.domElement);
 	controls.minDistance = 10;
@@ -85,10 +89,6 @@ function restoreCameraOrientation() {
 	});
 }
 
-function getPopulation(countyCode, year) {
-	return censusData.get(countyCode).get(year);
-}
-
 function initGeometry(features) {
 	var path = d3.geo.path().projection(d3.geo.mercator().center(RO_CENTER));
 
@@ -104,7 +104,14 @@ function initGeometry(features) {
 }
 
 function renderPopulation(year) {
-	counties.forEach(function(county) {
+	var faceMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+
+	// remove curren meshes
+	meshes.forEach(function(mesh) {
+		scene.remove(mesh);
+	});
+
+	meshes = counties.map(function(county) {
 		var extrusion = getExtrusion(getPopulation(county.id, year));
 
 		// create material color based on average
@@ -114,7 +121,6 @@ function renderPopulation(year) {
 			// color: mathColor
 			color: 0x00ff00,
 		});
-		var faceMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 
 		var geometry = county.geometry.extrude({
 			amount: Math.round(extrusion),
@@ -133,6 +139,8 @@ function renderPopulation(year) {
 		mesh.translateY(-180 + extrusion/2);
 
 		scene.add(mesh);
+
+		return mesh;
 	});
 }
 
