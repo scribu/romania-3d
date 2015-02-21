@@ -1,15 +1,14 @@
-var renderer, scene, camera, meshes = [];
-var censusData = d3.map();
-var counties;
+var renderer, scene, camera, raycaster, meshes = [];
+var mouse = new THREE.Vector2(), INTERSECTED;
+
+var counties = d3.map();
 
 var RO_CENTER = [45.9442858, 25.0094303];
 var MAX_EXTRUSION = 10;
 
-var years = [];
+var years = [], currentYear;
 
-function getPopulation(countyCode, year) {
-	return censusData.get(countyCode).get(year);
-}
+var numberFormatter = d3.format('0,000');
 
 // function that maps population int to extrusion value
 // requires the maximum possible population
@@ -20,6 +19,8 @@ var getExtrusion;
 var getLuminance;
 
 function initThree() {
+	raycaster = new THREE.Raycaster();
+
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	jQuery('body').append(renderer.domElement);
@@ -42,15 +43,32 @@ function initThree() {
 	animate();
 }
 
-function render() {
-	renderer.render(scene, camera);
+function updateInfoBox() {
+	raycaster.setFromCamera( mouse, camera );
+
+	var intersects = raycaster.intersectObjects( scene.children );
+
+	if (intersects.length > 0) {
+		var countyCode = intersects[0].object.userData.countyCode;
+		var county = counties.get(countyCode);
+		var population = county.get(currentYear); 
+		jQuery('#infobox').html(county.get('name') + ': ' + numberFormatter(population));
+	} else {
+		jQuery('#infobox').html('');
+	}
 }
 
 function animate() {
 	controls.update();
-	render();
+	renderer.render(scene, camera);
+	updateInfoBox();
 
 	requestAnimationFrame(animate);
+}
+
+function onDocumentMouseMove( event ) {
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
 
 function onWindowResize() {
@@ -84,14 +102,10 @@ function restoreCameraOrientation() {
 function initGeometry(features) {
 	var path = d3.geo.path().projection(d3.geo.mercator().center(RO_CENTER));
 
-	return features.map(function(feature) {
-		var flatGeometry = transformSVGPath(path(feature));
-
-		return {
-			id: feature.id,
-			name: feature.properties.name,
-			geometry: flatGeometry
-		}
+	features.forEach(function(feature) {
+		var county = counties.get(feature.id);
+		county.set('contour', transformSVGPath(path(feature)));
+		county.set('name', feature.properties.name);
 	});
 }
 
@@ -101,8 +115,9 @@ function renderPopulation(year) {
 		scene.remove(mesh);
 	});
 
-	meshes = counties.map(function(county) {
-		var population = getPopulation(county.id, year);
+	meshes = counties.entries().map(function(entry) {
+		var countyCode = entry.key, county = entry.value;
+		var population = county.get(year);
 		var extrusion = getExtrusion(population);
 		var luminance = getLuminance(population);
 		var color = d3.hsl(105, 0.8, luminance).toString();
@@ -110,7 +125,7 @@ function renderPopulation(year) {
 		var extrudeMaterial = new THREE.MeshLambertMaterial({color: color}); 
 		var faceMaterial = new THREE.MeshBasicMaterial({color: color});
 
-		var geometry = county.geometry.extrude({
+		var geometry = county.get('contour').extrude({
 			amount: extrusion,
 			bevelEnabled: false,
 			extrudeMaterial: 0,
@@ -119,6 +134,8 @@ function renderPopulation(year) {
 
 		var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(
 			[extrudeMaterial, faceMaterial]));
+
+		mesh.userData.countyCode = countyCode;
 
 		// rotate and position the elements nicely in the center
 		mesh.rotateX(Math.PI/2);
@@ -190,7 +207,7 @@ function prepareCensusData(recensaminte, id_judete) {
 			}
 		});
 
-		censusData.set(countyCode, datum);
+		counties.set(countyCode, datum);
 	});
 
 	return max_population;
@@ -208,7 +225,7 @@ loadData(dataSources, function(results) {
 	var judete = results.judete;
 
 	var features = topojson.feature(judete, judete.objects['romania-counties-geojson']).features;
-	counties = initGeometry(features);
+	initGeometry(features);
 
 	var yearSelect = jQuery('#current-year');
 
@@ -219,9 +236,9 @@ loadData(dataSources, function(results) {
 	yearSelect.on('click', 'button', function(ev) {
 		var $this = jQuery(this);
 
-		var year = parseInt($this.html(), 10);
+		currentYear = parseInt($this.html(), 10);
 
-		renderPopulation(year);
+		renderPopulation(currentYear);
 
 		yearSelect.find('button').removeClass('active');
 		$this.addClass('active');
@@ -230,5 +247,6 @@ loadData(dataSources, function(results) {
 	yearSelect.find('button')[0].click();
 });
 
+jQuery(document).on('mousemove', onDocumentMouseMove);
 jQuery(window).on('resize', onWindowResize);
 jQuery(window).on('beforeunload', saveCameraOrientation);
