@@ -3,7 +3,7 @@ var censusData = d3.map();
 var counties;
 
 var RO_CENTER = [45.9442858, 25.0094303];
-var max_population = 0, MAX_EXTRUSION = 10;
+var MAX_EXTRUSION = 10;
 
 var years = [];
 
@@ -18,6 +18,10 @@ function getPopulation(countyCode, year) {
 // function that maps population int to extrusion value
 // requires the maximum possible population
 var getExtrusion;
+
+// function that maps population int to luminance
+// requires the maximum possible population
+var getLuminance;
 
 function initThree() {
 	renderer = new THREE.WebGLRenderer();
@@ -104,23 +108,18 @@ function initGeometry(features) {
 }
 
 function renderPopulation(year) {
-	var faceMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
-
 	// remove curren meshes
 	meshes.forEach(function(mesh) {
 		scene.remove(mesh);
 	});
 
 	meshes = counties.map(function(county) {
-		var extrusion = getExtrusion(getPopulation(county.id, year));
+		var population = getPopulation(county.id, year);
+		var extrusion = getExtrusion(population);
+		var color = d3.hsl(105, 0.9, getLuminance(population)).toString();
 
-		// create material color based on average
-		// var scale = ((averageValues[i] - minValueAverage) / (maxValueAverage - minValueAverage)) * 255;
-		// var mathColor = gradient(Math.round(scale),255);
-		var extrudeMaterial = new THREE.MeshLambertMaterial({
-			// color: mathColor
-			color: 0x00ff00,
-		});
+		var extrudeMaterial = new THREE.MeshLambertMaterial({color: color}); 
+		var faceMaterial = new THREE.MeshBasicMaterial({color: color});
 
 		var geometry = county.geometry.extrude({
 			amount: Math.round(extrusion),
@@ -136,7 +135,7 @@ function renderPopulation(year) {
 		mesh.rotateX(Math.PI/2);
 		mesh.rotateZ(-1.60);
 		mesh.translateX(-425);
-		mesh.translateY(-180 + extrusion/2);
+		mesh.translateY(-183 + extrusion/2);
 
 		scene.add(mesh);
 
@@ -175,35 +174,45 @@ var dataSources = [
 	{type: 'csv', args: ['data/recensaminte.csv'], key: 'recensaminte'}
 ];
 
-function cleanCensusRow(row) {
-	var map = d3.map();
-
-	years.forEach(function(year) {
-		var value = parseInt(row[year], 10);
-
-		map.set(year, value);
-
-		if (value > max_population) {
-			max_population = value;
-		}
-	});
-
-	return map;
-}
-
-loadData(dataSources, function(results) {
-	years = Object.keys(results.recensaminte[0]).filter(function(key) {
+function extractYears(recensaminte) {
+	return Object.keys(recensaminte[0]).filter(function(key) {
 		return key !== 'name';
 	}).map(function(year) {
 		return parseInt(year, 10);
 	});
+}
 
-	results.recensaminte.forEach(function(row) {
-		var countyCode = results.id_judete[row.name];
-		censusData.set(countyCode, cleanCensusRow(row));
+function prepareCensusData(recensaminte, id_judete) {
+	var max_population = 0;
+	var year_sums = {};
+
+	recensaminte.forEach(function(row) {
+		var countyCode = id_judete[row.name];
+
+		var datum = d3.map();
+
+		years.forEach(function(year) {
+			var value = parseInt(row[year], 10);
+
+			datum.set(year, value);
+
+			if (value > max_population) {
+				max_population = value;
+			}
+		});
+
+		censusData.set(countyCode, datum);
 	});
 
+	return max_population;
+}
+
+loadData(dataSources, function(results) {
+	years = extractYears(results.recensaminte);
+	var max_population = prepareCensusData(results.recensaminte, results.id_judete);
+
 	getExtrusion = d3.scale.linear().domain([0, max_population]).range([0, MAX_EXTRUSION]);
+	getLuminance = d3.scale.linear().domain([0, max_population]);
 
 	var judete = results.judete;
 
