@@ -50,8 +50,9 @@ function initThree() {
 	plane.rotation.x = -Math.PI/2;
 	scene.add(plane);
 
-	controls = new THREE.OrbitControls(camera);
-	controls.noKeys = true;
+	controls = new THREE.TrackballControls(camera, renderer.domElement);
+	controls.minDistance = 10;
+	controls.maxDistance = 50;
 
 	animate();
 }
@@ -69,11 +70,11 @@ function animate() {
 
 function saveCameraOrientation() {
 	sessionStorage.setItem('camera.position', JSON.stringify(camera.position.toArray()));
-	sessionStorage.setItem('camera.rotation', JSON.stringify(camera.rotation.toArray()));
+	sessionStorage.setItem('camera.quarternion', JSON.stringify(camera.quarternion.toArray()));
 }
 
 function restoreCameraOrientation() {
-	['rotation', 'position'].forEach(function (key) {
+	['position', 'quarternion'].forEach(function (key) {
 		var val = JSON.parse(sessionStorage.getItem('camera.' + key));
 		if (val) {
 			camera[key].fromArray(val);
