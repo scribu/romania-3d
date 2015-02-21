@@ -28,10 +28,10 @@ function initThree() {
 	scene = new THREE.Scene();
 
 	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
-	camera.position.set(10, 22, 2.5);
-	camera.up.set(-0.06, 1, 0.14);
+	camera.position.set(5.758599954432616, 23.977288734105162, -14.469445776390728);
+	camera.up.set(-0.24237172077834185, 0.8703680689284763, -0.4519019512644872);
 
-	restoreCameraOrientation(camera);
+	// restoreCameraOrientation(camera);
 	// scene.add(camera);
 
 	var pointLight = new THREE.PointLight(0xFFFFFF);
