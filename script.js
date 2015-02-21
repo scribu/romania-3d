@@ -22,7 +22,7 @@ var getLuminance;
 function initThree() {
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	document.getElementById('chart').appendChild(renderer.domElement);
+	jQuery('body').append(renderer.domElement);
 
 	scene = new THREE.Scene();
 
@@ -31,25 +31,9 @@ function initThree() {
 	restoreCameraOrientation(camera);
 	// scene.add(camera);
 
-	// DEBUG: add a cube, for reference
-	var geometry = new THREE.BoxGeometry(1, 1, 1);
-	var material = new THREE.MeshBasicMaterial({color: 0x0000ff});
-	var cube = new THREE.Mesh(geometry, material);
-	scene.add(cube);
-
-	// add a light at a specific position
 	var pointLight = new THREE.PointLight(0xFFFFFF);
 	pointLight.position.set(800, 800, 800);
 	scene.add(pointLight);
-
-	// add a base plane on which we'll render our map
-	// var planeGeo = new THREE.PlaneBufferGeometry(10000, 10000, 10, 10);
-	// var planeMat = new THREE.MeshLambertMaterial({color: 0x666699});
-	// var plane = new THREE.Mesh(planeGeo, planeMat);
-
-	// rotate it to correct position
-	// plane.rotation.x = -Math.PI/2;
-	// scene.add(plane);
 
 	controls = new THREE.TrackballControls(camera, renderer.domElement);
 	controls.minDistance = 10;
@@ -120,7 +104,8 @@ function renderPopulation(year) {
 	meshes = counties.map(function(county) {
 		var population = getPopulation(county.id, year);
 		var extrusion = getExtrusion(population);
-		var color = d3.hsl(105, 0.9, getLuminance(population)).toString();
+		var luminance = getLuminance(population);
+		var color = d3.hsl(105, 0.8, luminance).toString();
 
 		var extrudeMaterial = new THREE.MeshLambertMaterial({color: color}); 
 		var faceMaterial = new THREE.MeshBasicMaterial({color: color});
@@ -148,6 +133,7 @@ function renderPopulation(year) {
 	});
 }
 
+// concurrently load multiple data sources; the callback will be invoked when everything is loaded
 function loadData(sources, callback) {
 	var remaining = sources.length;
 	var results = {}
@@ -170,8 +156,6 @@ function loadData(sources, callback) {
 		d3[source.type].apply(d3, args);
 	});
 }
-
-initThree();
 
 var dataSources = [
 	{type: 'json', args: ['data/romania-topo.json'], key: 'judete'},
@@ -211,6 +195,8 @@ function prepareCensusData(recensaminte, id_judete) {
 
 	return max_population;
 }
+
+initThree();
 
 loadData(dataSources, function(results) {
 	years = extractYears(results.recensaminte);
