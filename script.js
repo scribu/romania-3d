@@ -50,14 +50,18 @@ function updateInfoBox() {
 
 	var intersects = raycaster.intersectObjects( scene.children );
 
+	var html = '';
+
 	if (intersects.length > 0) {
 		var countyCode = intersects[0].object.userData.countyCode;
-		var county = counties.get(countyCode);
-		var population = county.get(currentYear); 
-		jQuery('#infobox').html(county.get('name') + ': ' + numberFormatter(population));
-	} else {
-		jQuery('#infobox').html('');
+		if (countyCode) {
+			var county = counties.get(countyCode);
+			var population = county.get(currentYear); 
+			html = county.get('name') + ': ' + numberFormatter(population);
+		}
 	}
+
+	jQuery('#infobox').html(html);
 }
 
 function animate() {
