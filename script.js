@@ -115,7 +115,7 @@ function renderPopulation(year) {
 
 	meshes = counties.map(function(county) {
 		var population = getPopulation(county.id, year);
-		var extrusion = Math.round(getExtrusion(population));
+		var extrusion = getExtrusion(population);
 		var color = d3.hsl(105, 0.9, getLuminance(population)).toString();
 
 		var extrudeMaterial = new THREE.MeshLambertMaterial({color: color}); 
