@@ -11,7 +11,7 @@ var getExtrusion;
 
 var years = [];
 
-var WIDTH = window.innerWidth, HEIGHT = window.innerHeight - 20,
+var WIDTH = window.innerWidth, HEIGHT = window.innerHeight - 34,
 	NEAR = 0.1, FAR = 10000,
 	VIEW_ANGLE = 45;
 
@@ -103,9 +103,9 @@ function initGeometry(features) {
 	});
 }
 
-function renderPopulation(yearIndex) {
+function renderPopulation(year) {
 	counties.forEach(function(county) {
-		var extrusion = getExtrusion(getPopulation(county.id, years[yearIndex]));
+		var extrusion = getExtrusion(getPopulation(county.id, year));
 
 		// create material color based on average
 		// var scale = ((averageValues[i] - minValueAverage) / (maxValueAverage - minValueAverage)) * 255;
@@ -202,17 +202,24 @@ loadData(dataSources, function(results) {
 	var features = topojson.feature(judete, judete.objects['romania-counties-geojson']).features;
 	counties = initGeometry(features);
 
-	var yearSelect = document.getElementById('current-year');
+	var yearSelect = jQuery('#current-year');
 
-	years.forEach(function(year) {
-		var option = document.createElement('option');
-		option.value = year;
-		option.text = year;
+	yearSelect.append(years.map(function(year) {
+		return jQuery('<button type="button" class="btn btn-default">').html(year);
+	}));
 
-		yearSelect.appendChild(option);
+	yearSelect.on('click', 'button', function(ev) {
+		var $this = jQuery(this);
+
+		var year = parseInt($this.html(), 10);
+
+		renderPopulation(year);
+
+		yearSelect.find('button').removeClass('active');
+		$this.addClass('active');
 	});
 
-	renderPopulation(0);
+	yearSelect.find('button')[0].click();
 });
 
 window.onbeforeunload = saveCameraOrientation;
