@@ -1,5 +1,5 @@
 var renderer, scene, camera, raycaster, meshes = [];
-var mouse = new THREE.Vector2(), INTERSECTED;
+var mouse = new THREE.Vector2();
 
 var counties = d3.map();
 
@@ -28,11 +28,10 @@ function initThree() {
 	scene = new THREE.Scene();
 
 	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
-	camera.position.set(5.758599954432616, 23.977288734105162, -14.469445776390728);
-	camera.up.set(-0.24237172077834185, 0.8703680689284763, -0.4519019512644872);
+	camera.position.set(3.4181337628594255, 23.434983172193633, 7.4759588134556365);
+	camera.up.set(-0.30962766566456534, 0.9170335457862612, 0.28927527470847336);
 
-	// restoreCameraOrientation(camera);
-	// scene.add(camera);
+	restoreCameraOrientation(camera);
 
 	var pointLight = new THREE.PointLight(0xFFFFFF);
 	pointLight.position.set(800, 800, 800);
@@ -45,19 +44,35 @@ function initThree() {
 	animate();
 }
 
+function initLine() {
+    var material = new THREE.LineBasicMaterial({
+        color: 0x0000ff
+    });
+
+	var geometry = new THREE.Geometry();
+	geometry.vertices.push(
+		new THREE.Vector3( 0, 0, 0 ),
+		new THREE.Vector3( 0, 100, 0 )
+	);
+
+	var line = new THREE.Line( geometry, material );
+	scene.add( line );
+}
+
 function updateInfoBox() {
 	raycaster.setFromCamera( mouse, camera );
 
-	var intersects = raycaster.intersectObjects( scene.children );
+	var intersects = raycaster.intersectObjects(scene.children);
 
 	var html = '';
 
-	if (intersects.length > 0) {
-		var countyCode = intersects[0].object.userData.countyCode;
+	for (var i=0; i<intersects.length; i++) {
+		var countyCode = intersects[i].object.userData.countyCode;
 		if (countyCode) {
 			var county = counties.get(countyCode);
 			var population = county.get(currentYear); 
 			html = county.get('name') + ': ' + numberFormatter(population);
+			break;
 		}
 	}
 
@@ -147,7 +162,7 @@ function renderPopulation(year) {
 		mesh.rotateX(Math.PI/2);
 		mesh.rotateZ(-1.60);
 		mesh.translateX(-425);
-		mesh.translateY(-183);
+		mesh.translateY(-182);
 		mesh.translateZ(-extrusion);
 
 		scene.add(mesh);
@@ -220,6 +235,7 @@ function prepareCensusData(recensaminte, id_judete) {
 }
 
 initThree();
+initLine();
 
 loadData(dataSources, function(results) {
 	years = extractYears(results.recensaminte);
