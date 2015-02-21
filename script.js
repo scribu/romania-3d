@@ -1,16 +1,17 @@
 var renderer, scene, camera;
-var censusData = {};
+var censusData = d3.map();
+var counties;
 
 var RO_CENTER = [45.9442858, 25.0094303];
-var max_population = 0, MAX_EXTRUSION = -10;
+var max_population = 0, MAX_EXTRUSION = 10;
 
 // function that maps population int to extrusion value
 // requires the maximum possible population
 var getExtrusion;
 
-var YEAR = 2002;  // DEBUG
+var years = [];
 
-var WIDTH = window.innerWidth, HEIGHT = window.innerHeight,
+var WIDTH = window.innerWidth, HEIGHT = window.innerHeight - 20,
 	NEAR = 0.1, FAR = 10000,
 	VIEW_ANGLE = 45;
 
@@ -29,10 +30,10 @@ function initThree() {
 	scene.add(camera);
 
 	// DEBUG: add a cube, for reference
-	var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-	var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-	var cube = new THREE.Mesh( geometry, material );
-	scene.add( cube );
+	var geometry = new THREE.BoxGeometry(1, 1, 1);
+	var material = new THREE.MeshBasicMaterial({color: 0x0000ff});
+	var cube = new THREE.Mesh(geometry, material);
+	scene.add(cube);
 
 	// add a light at a specific position
 	var pointLight = new THREE.PointLight(0xFFFFFF);
@@ -85,46 +86,53 @@ function restoreCameraOrientation() {
 }
 
 function getPopulation(countyCode, year) {
-	return censusData[countyCode][year];
+	return censusData.get(countyCode).get(year);
 }
 
-function renderTopography(features) {
+function initGeometry(features) {
 	var path = d3.geo.path().projection(d3.geo.mercator().center(RO_CENTER));
 
-	var counties = features.map(function(feature) {
-		var mesh = transformSVGPath(path(feature));
-
-		// create material color based on average
-		// var scale = ((averageValues[i] - minValueAverage) / (maxValueAverage - minValueAverage)) * 255;
-		// var mathColor = gradient(Math.round(scale),255);
-		var material = new THREE.MeshLambertMaterial({
-			// color: mathColor
-			color: 0x00ff00
-		});
-
-		// create extrude based on total
-		// var extrude = ((totalValues[i] - minValueTotal) / (maxValueTotal - minValueTotal)) * 100;
-		var extrude = getExtrusion(getPopulation(feature.id, YEAR));
-
-		var shape3d = mesh.extrude({amount: Math.round(extrude), bevelEnabled: false});
-
-		// create a mesh based on material and extruded shape
-		var toAdd = new THREE.Mesh(shape3d, material);
-
-		// rotate and position the elements nicely in the center
-		toAdd.rotateX(Math.PI/2);
-		toAdd.rotateZ(-1.60);
-		toAdd.translateX(-425);
-		toAdd.translateY(-180 + extrude/2);
-
-		// add to scene
-		scene.add(toAdd);
+	return features.map(function(feature) {
+		var flatGeometry = transformSVGPath(path(feature));
 
 		return {
 			id: feature.id,
 			name: feature.properties.name,
-			mesh: mesh
+			geometry: flatGeometry
 		}
+	});
+}
+
+function renderPopulation(yearIndex) {
+	counties.forEach(function(county) {
+		var extrusion = getExtrusion(getPopulation(county.id, years[yearIndex]));
+
+		// create material color based on average
+		// var scale = ((averageValues[i] - minValueAverage) / (maxValueAverage - minValueAverage)) * 255;
+		// var mathColor = gradient(Math.round(scale),255);
+		var extrudeMaterial = new THREE.MeshLambertMaterial({
+			// color: mathColor
+			color: 0x00ff00,
+		});
+		var faceMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+
+		var geometry = county.geometry.extrude({
+			amount: Math.round(extrusion),
+			bevelEnabled: false,
+			extrudeMaterial: 0,
+			material: 1
+		});
+
+		var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(
+			[extrudeMaterial, faceMaterial]));
+
+		// rotate and position the elements nicely in the center
+		mesh.rotateX(Math.PI/2);
+		mesh.rotateZ(-1.60);
+		mesh.translateX(-425);
+		mesh.translateY(-180 + extrusion/2);
+
+		scene.add(mesh);
 	});
 }
 
@@ -154,38 +162,57 @@ function loadData(sources, callback) {
 initThree();
 
 var dataSources = [
-	{type: 'json', args: ['data/judete.topojson'], key: 'judete'},
+	{type: 'json', args: ['data/romania-topo.json'], key: 'judete'},
 	{type: 'json', args: ['data/judete-id.json'], key: 'id_judete'},
-	{type: 'csv', args: ['data/recensaminte.csv', cleanCensusRow], key: 'recensaminte'}
+	{type: 'csv', args: ['data/recensaminte.csv'], key: 'recensaminte'}
 ];
 
 function cleanCensusRow(row) {
-	Object.keys(row).forEach(function(key) {
-		if (key !== 'name') {
-			row[key] = parseInt(row[key], 10);
+	var map = d3.map();
 
-			if (row[key] > max_population) {
-				max_population = row[key];
-			}
+	years.forEach(function(year) {
+		var value = parseInt(row[year], 10);
+
+		map.set(year, value);
+
+		if (value > max_population) {
+			max_population = value;
 		}
 	});
 
-	return row;
+	return map;
 }
 
 loadData(dataSources, function(results) {
+	years = Object.keys(results.recensaminte[0]).filter(function(key) {
+		return key !== 'name';
+	}).map(function(year) {
+		return parseInt(year, 10);
+	});
+
 	results.recensaminte.forEach(function(row) {
 		var countyCode = results.id_judete[row.name];
-		censusData[countyCode] = row;
+		censusData.set(countyCode, cleanCensusRow(row));
 	});
 
 	getExtrusion = d3.scale.linear().domain([0, max_population]).range([0, MAX_EXTRUSION]);
 
 	var judete = results.judete;
 
-	var features = topojson.feature(judete, judete.objects.ro_judete).features;
+	var features = topojson.feature(judete, judete.objects['romania-counties-geojson']).features;
+	counties = initGeometry(features);
 
-	renderTopography(features);
+	var yearSelect = document.getElementById('current-year');
+
+	years.forEach(function(year) {
+		var option = document.createElement('option');
+		option.value = year;
+		option.text = year;
+
+		yearSelect.appendChild(option);
+	});
+
+	renderPopulation(0);
 });
 
 window.onbeforeunload = saveCameraOrientation;

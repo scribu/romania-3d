@@ -1,0 +1,9 @@
+body {
+	margin: 0;
+}
+
+#current-year {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+}
