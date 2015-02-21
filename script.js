@@ -135,7 +135,7 @@ function renderPopulation(year) {
 		mesh.rotateX(Math.PI/2);
 		mesh.rotateZ(-1.60);
 		mesh.translateX(-425);
-		mesh.translateY(-183 + extrusion/2);
+		mesh.translateY(-183);
 		mesh.translateZ(-extrusion);
 
 		scene.add(mesh);
