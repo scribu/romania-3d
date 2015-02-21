@@ -77,21 +77,26 @@ function animate() {
 	requestAnimationFrame(animate);
 }
 
+
+function cameraIter(callback) {
+	['position', 'quarternion', 'up'].forEach(callback);
+}
+
 function saveCameraOrientation() {
-	sessionStorage.setItem('camera.position', JSON.stringify(camera.position.toArray()));
-	sessionStorage.setItem('camera.quarternion', JSON.stringify(camera.quarternion.toArray()));
+	cameraIter(function (key) {
+		sessionStorage.setItem('camera.' + key, JSON.stringify(camera[key].toArray()));
+	});
 }
 
 function restoreCameraOrientation() {
-	['position', 'quarternion'].forEach(function (key) {
+	cameraIter(function (key) {
 		var val = JSON.parse(sessionStorage.getItem('camera.' + key));
 		if (val) {
 			camera[key].fromArray(val);
 		}
-
-		console.log('restored ' + key);
 	});
 }
+
 
 function initGeometry(features) {
 	var path = d3.geo.path().projection(d3.geo.mercator().center(RO_CENTER));
