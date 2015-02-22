@@ -23,6 +23,7 @@ function initThree() {
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0x000000);
 	jQuery('body').append(renderer.domElement);
 
 	scene = new THREE.Scene();
