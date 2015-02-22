@@ -32,7 +32,7 @@ function initThree() {
 	camera.position.set(3.4181337628594255, 23.434983172193633, 7.4759588134556365);
 	camera.up.set(-0.30962766566456534, 0.9170335457862612, 0.28927527470847336);
 
-	restoreCameraOrientation(camera);
+	// restoreCameraOrientation(camera);
 
 	var pointLight = new THREE.PointLight(0xFFFFFF);
 	pointLight.position.set(800, 800, 800);
@@ -236,7 +236,7 @@ function prepareCensusData(recensaminte, id_judete) {
 }
 
 initThree();
-initLine();
+// initLine();
 
 loadData(dataSources, function(results) {
 	years = extractYears(results.recensaminte);
