@@ -5,8 +5,8 @@ body {
 
 #infobox {
 	position: absolute;
-	top: 6px;
-	right: 6px;
+	top: 0;
+	right: 3px;
 	color: white;
 	opacity: 0.7;
 }
