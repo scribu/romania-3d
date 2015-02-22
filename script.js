@@ -3,6 +3,9 @@ var mouse = new THREE.Vector2();
 
 var counties = d3.map();
 
+// transormation matrix
+var positioning;
+
 var RO_CENTER = [45.9442858, 25.0094303];
 var MAX_EXTRUSION = 10;
 
@@ -141,6 +144,15 @@ function initGeometry(features) {
 	});
 }
 
+function initPositioningTransform() {
+	positioning = new THREE.Matrix4();
+
+	var tmp = new THREE.Matrix4();
+	positioning.multiply(tmp.makeRotationX(Math.PI/2));
+	positioning.multiply(tmp.makeRotationZ(-1.60));
+	positioning.multiply(tmp.makeTranslation(-425, -182, 0));
+}
+
 function renderPopulation(year) {
 	// remove curren meshes
 	meshes.forEach(function(mesh) {
@@ -169,11 +181,7 @@ function renderPopulation(year) {
 
 		mesh.userData.countyCode = countyCode;
 
-		// rotate and position the elements nicely in the center
-		mesh.rotateX(Math.PI/2);
-		mesh.rotateZ(-1.60);
-		mesh.translateX(-425);
-		mesh.translateY(-182);
+		mesh.applyMatrix(positioning);
 		mesh.translateZ(-extrusion);
 
 		scene.add(mesh);
@@ -246,6 +254,7 @@ function prepareCensusData(recensaminte, id_judete) {
 }
 
 initThree();
+initPositioningTransform();
 // initLine();
 
 loadData(dataSources, function(results) {
