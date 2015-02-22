@@ -18,13 +18,23 @@ var getExtrusion;
 // requires the maximum possible population
 var getLuminance;
 
-function initThree() {
-	raycaster = new THREE.Raycaster();
+function initRenderer() {
+	if (window.WebGLRenderingContext) {
+		renderer = new THREE.WebGLRenderer();
+	} else {
+		renderer = new THREE.CanvasRenderer();
+	}
 
-	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.setClearColor(0x000000);
+
 	jQuery('body').append(renderer.domElement);
+}
+
+function initThree() {
+	initRenderer();
+
+	raycaster = new THREE.Raycaster();
 
 	scene = new THREE.Scene();
 
