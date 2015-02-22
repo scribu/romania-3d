@@ -16,3 +16,16 @@ body {
 	top: 6px;
 	left: 6px;
 }
+
+/* retina screens */
+@media
+(-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+	#infobox {
+		font-size: 42px;
+	}
+
+	#current-year .btn {
+		font-size: 28px;
+	}
+}
