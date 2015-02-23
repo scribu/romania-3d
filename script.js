@@ -37,21 +37,36 @@ function initThree() {
 
 	scene = new THREE.Scene();
 
-	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
-	camera.position.set(-8.278324114488553, 23.715105536749885, 5.334970045945842);
-	camera.up.set(-0.3079731382492934, 0.9436692395156481, -0.12099963846565401);
-
-	// restoreCameraOrientation(camera);
-
-	var pointLight = new THREE.PointLight(0xFFFFFF);
-	pointLight.position.set(-800, 800, 800);
-	scene.add(pointLight);
+	initCamera();
+	initLights();
 
 	controls = new THREE.TrackballControls(camera, renderer.domElement);
 	controls.minDistance = 10;
 	controls.maxDistance = 50;
 
 	animate();
+}
+
+function initCamera() {
+	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+	camera.position.set(-8.278324114488553, 23.715105536749885, 5.334970045945842);
+	camera.up.set(-0.3079731382492934, 0.9436692395156481, -0.12099963846565401);
+
+	// restoreCameraOrientation(camera);
+}
+
+function initLights() {
+	var pointLight = new THREE.PointLight(0xFFFFFF);
+	pointLight.position.set(-800, 800, 800);
+	scene.add(pointLight);
+
+	var pointLight2 = new THREE.PointLight(0xFFFFFF);
+	pointLight2.position.set(800, 800, 800);
+	scene.add(pointLight2);
+
+	var pointLight3 = new THREE.PointLight(0xFFFFFF);
+	pointLight3.position.set(0, 800, -800);
+	scene.add(pointLight3);
 }
 
 function initLine() {
