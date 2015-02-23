@@ -6,7 +6,7 @@ var counties = d3.map();
 // transormation matrix
 var positioning;
 
-var RO_CENTER = [45.9442858, 25.0094303];
+var RO_CENTER = [25.0094303, 45.9442858];
 var MAX_EXTRUSION = 10;
 
 var years = [], currentYear;
@@ -38,13 +38,13 @@ function initThree() {
 	scene = new THREE.Scene();
 
 	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
-	camera.position.set(3.4181337628594255, 23.434983172193633, 7.4759588134556365);
-	camera.up.set(-0.30962766566456534, 0.9170335457862612, 0.28927527470847336);
+	camera.position.set(-8.278324114488553, 23.715105536749885, 5.334970045945842);
+	camera.up.set(-0.3079731382492934, 0.9436692395156481, -0.12099963846565401);
 
 	// restoreCameraOrientation(camera);
 
 	var pointLight = new THREE.PointLight(0xFFFFFF);
-	pointLight.position.set(800, 800, 800);
+	pointLight.position.set(-800, 800, 800);
 	scene.add(pointLight);
 
 	controls = new THREE.TrackballControls(camera, renderer.domElement);
@@ -152,8 +152,7 @@ function initPositioningTransform() {
 
 	var tmp = new THREE.Matrix4();
 	positioning.multiply(tmp.makeRotationX(Math.PI/2));
-	positioning.multiply(tmp.makeRotationZ(-1.60));
-	positioning.multiply(tmp.makeTranslation(-425, -182, 0));
+	positioning.multiply(tmp.makeTranslation(-480, -250, 0));
 }
 
 function updateMeshes(year) {
