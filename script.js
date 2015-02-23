@@ -258,12 +258,45 @@ initPositioningTransform();
 // initLine();
 
 var YearButtons = React.createClass({
-	getInitialState: function() {
-		return {currentYear: this.props.years[0]};
+	getYearFromHash: function() {
+		var re = new RegExp('#/an/(\\d{4})');
+		var match = window.location.hash.match(re);
+		var currentYear;
+
+		if (match) {
+			currentYear = +match[1];
+			if (this.props.years.indexOf(currentYear) > -1) {
+				return currentYear;
+			}
+		}
+
+		return false;
 	},
 
-	onClick: function(year) {
-		this.setState({currentYear: year});
+	getInitialState: function() {
+		var currentYear = this.getYearFromHash();
+
+		if (!currentYear) {
+			currentYear = this.props.years[0];
+		}
+
+		return {currentYear: currentYear};
+	},
+
+	componentDidMount: function() {
+		window.addEventListener('hashchange', this.onHashChange);
+	},
+
+	componentWillUnmount: function() {
+		window.removeEventListener('hashchange', this.onHashChange);
+	},
+
+	onHashChange: function(year) {
+		var year = this.getYearFromHash();
+
+		if (year) {
+			this.setState({currentYear: year});
+		}
 	},
 
 	render: function() {
@@ -279,7 +312,7 @@ var YearButtons = React.createClass({
 				'active': year == self.state.currentYear
 			});
 
-			return <button className={classes} key={year} onClick={self.onClick.bind(self, year)}>{year}</button>;
+			return <a className={classes} key={year} href={'#/an/' + year}>{year}</a>;
 		}
 
 		return <div id="current-year" className="btn-group" role="group">{self.props.years.map(createButton)}</div>;
