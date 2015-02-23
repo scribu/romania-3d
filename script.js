@@ -22,11 +22,7 @@ var getExtrusion;
 var getLuminance;
 
 function initRenderer() {
-	if (window.WebGLRenderingContext) {
-		renderer = new THREE.WebGLRenderer();
-	} else {
-		renderer = new THREE.CanvasRenderer();
-	}
+	renderer = new THREE.WebGLRenderer();
 
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.setClearColor(0x000000);
