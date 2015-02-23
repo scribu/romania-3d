@@ -31,7 +31,7 @@ function initRenderer() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.setClearColor(0x000000);
 
-	jQuery('body').append(renderer.domElement);
+	document.body.appendChild(renderer.domElement);
 }
 
 function initThree() {
@@ -90,7 +90,7 @@ function updateInfoBox() {
 		}
 	}
 
-	jQuery('#infobox').html(html);
+	document.getElementById('infobox').innerHTML = html;
 }
 
 function animate() {
@@ -334,6 +334,6 @@ loadData(dataSources, function(results) {
 	React.render(<YearButtons years={years} />, document.getElementById('container'));
 });
 
-jQuery(document).on('mousemove', onDocumentMouseMove);
-jQuery(window).on('resize', onWindowResize);
-jQuery(window).on('beforeunload', saveCameraOrientation);
+document.addEventListener('mousemove', onDocumentMouseMove);
+window.addEventListener('resize', onWindowResize);
+window.addEventListener('beforeunload', saveCameraOrientation);
