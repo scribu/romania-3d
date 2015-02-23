@@ -153,7 +153,7 @@ function initPositioningTransform() {
 	positioning.multiply(tmp.makeTranslation(-425, -182, 0));
 }
 
-function renderPopulation(year) {
+function updateMeshes(year) {
 	// remove curren meshes
 	meshes.forEach(function(mesh) {
 		scene.remove(mesh);
@@ -270,7 +270,7 @@ var YearButtons = React.createClass({
 		var self = this;
 
 		currentYear = self.state.currentYear;  // used by infobox
-		renderPopulation(this.state.currentYear);
+		updateMeshes(this.state.currentYear);
 
 		function createButton(year) {
 			var classes = classNames({
