@@ -257,6 +257,35 @@ initThree();
 initPositioningTransform();
 // initLine();
 
+var YearButtons = React.createClass({
+	getInitialState: function() {
+		return {currentYear: this.props.years[0]};
+	},
+
+	onClick: function(year) {
+		this.setState({currentYear: year});
+	},
+
+	render: function() {
+		var self = this;
+
+		currentYear = self.state.currentYear;  // used by infobox
+		renderPopulation(this.state.currentYear);
+
+		function createButton(year) {
+			var classes = classNames({
+				'btn': true,
+				'btn-default': true,
+				'active': year == self.state.currentYear
+			});
+
+			return <button className={classes} key={year} onClick={self.onClick.bind(self, year)}>{year}</button>;
+		}
+
+		return <div id="current-year" className="btn-group" role="group">{self.props.years.map(createButton)}</div>;
+	}
+});
+
 loadData(dataSources, function(results) {
 	years = extractYears(results.recensaminte);
 	var max_population = prepareCensusData(results.recensaminte, results.id_judete);
@@ -269,24 +298,7 @@ loadData(dataSources, function(results) {
 	var features = topojson.feature(judete, judete.objects['romania-counties-geojson']).features;
 	initGeometry(features);
 
-	var yearSelect = jQuery('#current-year');
-
-	yearSelect.append(years.map(function(year) {
-		return jQuery('<button type="button" class="btn btn-default">').html(year);
-	}));
-
-	yearSelect.on('click', 'button', function(ev) {
-		var $this = jQuery(this);
-
-		currentYear = parseInt($this.html(), 10);
-
-		renderPopulation(currentYear);
-
-		yearSelect.find('button').removeClass('active');
-		$this.addClass('active');
-	});
-
-	yearSelect.find('button')[0].click();
+	React.render(<YearButtons years={years} />, document.getElementById('container'));
 });
 
 jQuery(document).on('mousemove', onDocumentMouseMove);
