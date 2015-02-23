@@ -134,8 +134,15 @@ function initGeometry(features) {
 	var path = d3.geo.path().projection(d3.geo.mercator().center(RO_CENTER));
 
 	features.forEach(function(feature) {
+		if (feature.id === 'IF') {
+			// remove Bucharest hole
+			feature.geometry.coordinates = feature.geometry.coordinates.slice(0, 1);
+		}
+
+		var contour = transformSVGPath(path(feature));
+
 		var county = counties.get(feature.id);
-		county.set('contour', transformSVGPath(path(feature)));
+		county.set('contour', contour);
 		county.set('name', feature.properties.name);
 	});
 }
